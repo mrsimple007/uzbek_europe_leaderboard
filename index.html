@@ -270,253 +270,258 @@
     <div id="my-position" class="my-position" style="display: none;"></div>
 
     <script>
-        // Initialize Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+        (function() {
+            // Initialize Telegram WebApp
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.ready();
 
-        const userId = tg.initDataUnsafe?.user?.id;
-        let leaderboardData = null;
+            const userId = tg.initDataUnsafe?.user?.id;
+            let leaderboardData = null;
 
         const SUPABASE_URL = 'https://azoshxgptlskbwmjekot.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6b3NoeGdwdGxza2J3bWpla290Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTIzNDMwMiwiZXhwIjoyMDc2ODEwMzAyfQ.kyMBOTUv7ikyPDFy_0ofuUL2f5bVtOP58QY7ITHa4b8';
-       
-        const ADMIN_IDS = [7967610894, 8437026582, 122290051, 999932510];
+             
+            const ADMIN_IDS = [7967610894, 8437026582, 122290051, 999932510];
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function getRankEmoji(index) {
-            if (index === 0) return '🥇';
-            if (index === 1) return '🥈';
-            if (index === 2) return '🥉';
-            return `${index + 1}.`;
-        }
-
-        function renderAllLeaderboard(users) {
-            const container = document.getElementById('all-leaderboard');
-            
-            if (!users || users.length === 0) {
-                container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
-                return;
+            function getRankEmoji(index) {
+                if (index === 0) return '🥇';
+                if (index === 1) return '🥈';
+                if (index === 2) return '🥉';
+                return `${index + 1}.`;
             }
 
-            container.innerHTML = users.map((user, index) => {
-                const isCurrentUser = user.user_id === userId;
-                return `
-                <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
-                    <div class="user-header">
-                        <div class="user-info">
-                            <div class="rank">${getRankEmoji(index)}</div>
-                            <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
-                        </div>
-                        <div class="total-points">${user.total_score} ball</div>
-                    </div>
-                </div>
-            `}).join('');
-        }
+            function renderAllLeaderboard(users) {
+                const container = document.getElementById('all-leaderboard');
+                
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
+                    return;
+                }
 
-        function renderDetailsLeaderboard(users) {
-            const container = document.getElementById('details-leaderboard');
-            
-            if (!users || users.length === 0) {
-                container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
-                return;
+                container.innerHTML = users.map((user, index) => {
+                    const isCurrentUser = user.user_id === userId;
+                    return `
+                    <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
+                        <div class="user-header">
+                            <div class="user-info">
+                                <div class="rank">${getRankEmoji(index)}</div>
+                                <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
+                            </div>
+                            <div class="total-points">${user.total_score} ball</div>
+                        </div>
+                    </div>
+                `}).join('');
             }
 
-            container.innerHTML = users.map((user, index) => {
-                const isCurrentUser = user.user_id === userId;
-                return `
-                <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
-                    <div class="user-header">
-                        <div class="user-info">
-                            <div class="rank">${getRankEmoji(index)}</div>
-                            <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
-                        </div>
-                        <div class="total-points">${user.total_score} ball</div>
-                    </div>
-                    <div class="activity-breakdown">
-                        <div class="activity-item">
-                            <span class="activity-label">💬 Izohlar</span>
-                            <span class="activity-value">${user.comment_points || 0}</span>
-                        </div>
-                        <div class="activity-item">
-                            <span class="activity-label">❤️ Reaksiyalar</span>
-                            <span class="activity-value">${user.reaction_points || 0}</span>
-                        </div>
-                        <div class="activity-item">
-                            <span class="activity-label">🚀 Boost</span>
-                            <span class="activity-value">${user.boost_points || 0}</span>
-                        </div>
-                        <div class="activity-item">
-                            <span class="activity-label">🎯 Quizlar</span>
-                            <span class="activity-value">${user.quiz_points || 0}</span>
-                        </div>
-                        <div class="activity-item">
-                            <span class="activity-label">👥 Referal</span>
-                            <span class="activity-value">${user.referral_points || 0}</span>
-                        </div>
-                    </div>
-                </div>
-            `}).join('');
-        }
+            function renderDetailsLeaderboard(users) {
+                const container = document.getElementById('details-leaderboard');
+                
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
+                    return;
+                }
 
-        function renderChannelsLeaderboard(users) {
-            const container = document.getElementById('channels-leaderboard');
-            
-            if (!users || users.length === 0) {
-                container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
-                return;
+                container.innerHTML = users.map((user, index) => {
+                    const isCurrentUser = user.user_id === userId;
+                    return `
+                    <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
+                        <div class="user-header">
+                            <div class="user-info">
+                                <div class="rank">${getRankEmoji(index)}</div>
+                                <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
+                            </div>
+                            <div class="total-points">${user.total_score} ball</div>
+                        </div>
+                        <div class="activity-breakdown">
+                            <div class="activity-item">
+                                <span class="activity-label">💬 Izohlar</span>
+                                <span class="activity-value">${user.comment_points || 0}</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">❤️ Reaksiyalar</span>
+                                <span class="activity-value">${user.reaction_points || 0}</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">🚀 Boost</span>
+                                <span class="activity-value">${user.boost_points || 0}</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">🎯 Quizlar</span>
+                                <span class="activity-value">${user.quiz_points || 0}</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">👥 Referal</span>
+                                <span class="activity-value">${user.referral_points || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
             }
 
-            container.innerHTML = users.map((user, index) => {
-                const isCurrentUser = user.user_id === userId;
-                return `
-                <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
-                    <div class="user-header">
-                        <div class="user-info">
-                            <div class="rank">${getRankEmoji(index)}</div>
-                            <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
-                        </div>
-                        <div class="total-points">${user.total_score} ball</div>
-                    </div>
-                    <div class="channel-breakdown">
-                        <div class="channel-item">
-                            <span class="channel-label">🇩🇪 Uzbek Europe</span>
-                            <span class="channel-value">${user.uzbek_europe_points || 0} ball</span>
-                        </div>
-                        <div class="channel-item">
-                            <span class="channel-label">📚 Muslimbek</span>
-                            <span class="channel-value">${user.muslimbek_points || 0} ball</span>
-                        </div>
-                    </div>
-                </div>
-            `}).join('');
-        }
+            function renderChannelsLeaderboard(users) {
+                const container = document.getElementById('channels-leaderboard');
+                
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
+                    return;
+                }
 
-        function showMyPosition(position) {
-            const container = document.getElementById('my-position');
-            if (position) {
-                container.style.display = 'block';
-                container.textContent = `Sizning o'rningiz: #${position.rank} - ${position.points} ball`;
+                container.innerHTML = users.map((user, index) => {
+                    const isCurrentUser = user.user_id === userId;
+                    return `
+                    <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
+                        <div class="user-header">
+                            <div class="user-info">
+                                <div class="rank">${getRankEmoji(index)}</div>
+                                <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
+                            </div>
+                            <div class="total-points">${user.total_score} ball</div>
+                        </div>
+                        <div class="channel-breakdown">
+                            <div class="channel-item">
+                                <span class="channel-label">🇩🇪 Uzbek Europe</span>
+                                <span class="channel-value">${user.uzbek_europe_points || 0} ball</span>
+                            </div>
+                            <div class="channel-item">
+                                <span class="channel-label">📚 Muslimbek</span>
+                                <span class="channel-value">${user.muslimbek_points || 0} ball</span>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
             }
-        }
 
-        function showTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.leaderboard').forEach(l => l.classList.remove('active'));
-            
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            document.getElementById(`${tab}-leaderboard`).classList.add('active');
-        }
+            function showMyPosition(position) {
+                const container = document.getElementById('my-position');
+                if (position) {
+                    container.style.display = 'block';
+                    container.textContent = `Sizning o'rningiz: #${position.rank} - ${position.points} ball`;
+                }
+            }
 
-        async function loadData() {
-            try {
-                document.querySelectorAll('.leaderboard').forEach(el => {
-                    el.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
-                });
+            function showTab(tab) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.leaderboard').forEach(l => l.classList.remove('active'));
+                
+                document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+                document.getElementById(`${tab}-leaderboard`).classList.add('active');
+            }
 
-                const cutoffDate = new Date();
-                cutoffDate.setDate(cutoffDate.getDate() - 30);
+            async function loadData() {
+                try {
+                    document.querySelectorAll('.leaderboard').forEach(el => {
+                        el.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
+                    });
 
-                const { data, error } = await supabase
-                    .from('activity_log')
-                    .select('user_id, username, first_name, points, activity_type, channel_id')
-                    .gte('timestamp', cutoffDate.toISOString());
+                    const cutoffDate = new Date();
+                    cutoffDate.setDate(cutoffDate.getDate() - 30);
 
-                if (error) throw error;
+                    const { data, error } = await db
+                        .from('activity_log')
+                        .select('user_id, username, first_name, points, activity_type, channel_id')
+                        .gte('timestamp', cutoffDate.toISOString());
 
-                console.log(`Fetched ${data.length} activity records`);
-
-                const userScores = {};
-
-                data.forEach(row => {
-                    const uid = row.user_id;
-
-                    if (!userScores[uid]) {
-                        userScores[uid] = {
-                            user_id: uid,
-                            username: row.username,
-                            first_name: row.first_name,
-                            total_score: 0,
-                            comment_points: 0,
-                            reaction_points: 0,
-                            boost_points: 0,
-                            quiz_points: 0,
-                            referral_points: 0,
-                            uzbek_europe_points: 0,
-                            muslimbek_points: 0
-                        };
+                    if (error) {
+                        console.error('Supabase error:', error);
+                        throw error;
                     }
 
-                    const points = row.points;
-                    const activity = row.activity_type;
-                    const channel = row.channel_id;
+                    console.log(`Fetched ${data.length} activity records`);
 
-                    userScores[uid].total_score += points;
+                    const userScores = {};
 
-                    if (activity === 'comment') userScores[uid].comment_points += points;
-                    else if (activity === 'reaction') userScores[uid].reaction_points += points;
-                    else if (activity === 'boost') userScores[uid].boost_points += points;
-                    else if (activity === 'quiz') userScores[uid].quiz_points += points;
-                    else if (activity === 'referral' || activity === 'joining') userScores[uid].referral_points += points;
+                    data.forEach(row => {
+                        const uid = row.user_id;
 
-                    if (channel === 'uzbek_europe') userScores[uid].uzbek_europe_points += points;
-                    else if (channel === 'muslimbek_01') userScores[uid].muslimbek_points += points;
-                });
+                        if (!userScores[uid]) {
+                            userScores[uid] = {
+                                user_id: uid,
+                                username: row.username,
+                                first_name: row.first_name,
+                                total_score: 0,
+                                comment_points: 0,
+                                reaction_points: 0,
+                                boost_points: 0,
+                                quiz_points: 0,
+                                referral_points: 0,
+                                uzbek_europe_points: 0,
+                                muslimbek_points: 0
+                            };
+                        }
 
-                const filteredUsers = Object.values(userScores)
-                    .filter(user => !ADMIN_IDS.includes(user.user_id))
-                    .sort((a, b) => b.total_score - a.total_score);
+                        const points = row.points;
+                        const activity = row.activity_type;
+                        const channel = row.channel_id;
 
-                console.log(`Processed ${filteredUsers.length} users`);
+                        userScores[uid].total_score += points;
 
-                let myPosition = null;
-                filteredUsers.forEach((user, index) => {
-                    if (user.user_id === userId) {
-                        myPosition = {
-                            rank: index + 1,
-                            points: user.total_score
-                        };
-                    }
-                });
+                        if (activity === 'comment') userScores[uid].comment_points += points;
+                        else if (activity === 'reaction') userScores[uid].reaction_points += points;
+                        else if (activity === 'boost') userScores[uid].boost_points += points;
+                        else if (activity === 'quiz') userScores[uid].quiz_points += points;
+                        else if (activity === 'referral' || activity === 'joining') userScores[uid].referral_points += points;
 
-                leaderboardData = {
-                    leaderboard: filteredUsers.slice(0, 50),
-                    my_position: myPosition,
-                    total_users: filteredUsers.length
-                };
+                        if (channel === 'uzbek_europe') userScores[uid].uzbek_europe_points += points;
+                        else if (channel === 'muslimbek_01') userScores[uid].muslimbek_points += points;
+                    });
 
-                renderAllLeaderboard(leaderboardData.leaderboard);
-                renderDetailsLeaderboard(leaderboardData.leaderboard);
-                renderChannelsLeaderboard(leaderboardData.leaderboard);
-                showMyPosition(leaderboardData.my_position);
+                    const filteredUsers = Object.values(userScores)
+                        .filter(user => !ADMIN_IDS.includes(user.user_id))
+                        .sort((a, b) => b.total_score - a.total_score);
 
-            } catch (error) {
-                console.error('Error loading data:', error);
-                document.querySelectorAll('.leaderboard').forEach(el => {
-                    el.innerHTML = '<div class="error">Xatolik yuz berdi. Qaytadan yuklang.</div>';
-                });
+                    console.log(`Processed ${filteredUsers.length} users`);
+
+                    let myPosition = null;
+                    filteredUsers.forEach((user, index) => {
+                        if (user.user_id === userId) {
+                            myPosition = {
+                                rank: index + 1,
+                                points: user.total_score
+                            };
+                        }
+                    });
+
+                    leaderboardData = {
+                        leaderboard: filteredUsers.slice(0, 50),
+                        my_position: myPosition,
+                        total_users: filteredUsers.length
+                    };
+
+                    renderAllLeaderboard(leaderboardData.leaderboard);
+                    renderDetailsLeaderboard(leaderboardData.leaderboard);
+                    renderChannelsLeaderboard(leaderboardData.leaderboard);
+                    showMyPosition(leaderboardData.my_position);
+
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    document.querySelectorAll('.leaderboard').forEach(el => {
+                        el.innerHTML = '<div class="error">Xatolik yuz berdi. Qaytadan yuklang.</div>';
+                    });
+                }
             }
-        }
 
-        // Event listeners
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                showTab(this.getAttribute('data-tab'));
+            // Event listeners
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    showTab(this.getAttribute('data-tab'));
+                });
             });
-        });
 
-        document.getElementById('refresh-btn').addEventListener('click', loadData);
+            document.getElementById('refresh-btn').addEventListener('click', loadData);
 
-        // Initialize
-        loadData();
+            // Initialize
+            loadData();
 
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            if (!document.hidden) {
-                loadData();
-            }
-        }, 30000);
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                if (!document.hidden) {
+                    loadData();
+                }
+            }, 30000);
+        })();
     </script>
 </body>
 </html>
