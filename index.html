@@ -253,18 +253,65 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        .rules-content {
+            padding: 20px;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            line-height: 1.6;
+        }
+
+        .rules-content h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .rules-content h3 {
+            margin: 16px 0 8px 0;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .rules-content h4 {
+            margin: 12px 0 6px 0;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .rules-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .rules-content li {
+            margin: 4px 0;
+        }
+
+        .rules-content hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 2px solid var(--tg-theme-hint-color, #ddd);
+        }
+
+        .rules-content p {
+            margin: 8px 0;
+        }
+
+        .rules-content strong {
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🏆 Liderlar Jadvali</h1>
-        <p class="subtitle">Oxirgi 30 kun</p>
+        <p class="subtitle">18-yanvar - 18-fevral</p>
     </div>
 
     <div class="tabs">
         <button class="tab active" data-tab="all">Umumiy</button>
         <button class="tab" data-tab="details">Batafsil</button>
         <button class="tab" data-tab="channels">Kanallar</button>
+        <button class="tab" data-tab="rules">Qoidalar</button>
     </div>
 
     <div id="all-leaderboard" class="leaderboard active">
@@ -277,6 +324,72 @@
 
     <div id="channels-leaderboard" class="leaderboard">
         <div class="loading">Yuklanmoqda...</div>
+    </div>
+
+    <div id="rules-leaderboard" class="leaderboard">
+        <div class="rules-content">
+            <h2>📋 TANLOV QOIDALARI</h2>
+            
+            <p style="text-align: center; margin-bottom: 20px;"><strong>🗓 Tanlov muddati: 18-yanvar - 18-fevral</strong></p>
+            
+            <hr>
+            
+            <h3>💰 Ballar qanday ishlab topiladi:</h3>
+            
+            <h4>📝 Kommentlar:</h4>
+            <ul>
+                <li>1-komment: 15 ball</li>
+                <li>2-komment: 14 ball</li>
+                <li>3-komment: 13 ball</li>
+                <li>Boshqa komment: 10 ball</li>
+            </ul>
+            <p style="font-style: italic;">Bir postga max 1 ta komment hisobga olinadi</p>
+            
+            <h4>📊 Kunlik limitlar (kommentlar):</h4>
+            <ul>
+                <li>Har bir kanaldan 25 balldan</li>
+                <li>2 ta kanal: 25 + 25 = <strong>50 ball</strong></li>
+            </ul>
+            
+            <h4>❤️ Reaksiyalar:</h4>
+            <ul>
+                <li>Har bir reaksiya: 3 ball (birinchi 48 soat)</li>
+                <li>48 soatdan keyin: 1 ball</li>
+            </ul>
+            
+            <h4>📊 Kunlik limitlar (reaksiyalar):</h4>
+            <ul>
+                <li>2 ta kanal: 10 + 10 = <strong>20 ball</strong></li>
+            </ul>
+            
+            <h4>🎯 Quiz tuzish:</h4>
+            <ul>
+                <li>Har bir quiz: 2 ball</li>
+                <li>@SimpleQuizzer_bot orqali quiz yarating!</li>
+                <li><strong>Cheklovsiz!</strong></li>
+            </ul>
+            
+            <h4>💣 Boost uchun:</h4>
+            <ul>
+                <li>Har bir boost: 20 ball</li>
+                <li>@Muslimbek_01 va @Uzbek_Europe</li>
+                <li><strong>Cheklovsiz!</strong></li>
+            </ul>
+            
+            <h4>👥 Referal (max 200 ta):</h4>
+            <ul>
+                <li>Har bir do'stingiz uchun siz: 5 ball</li>
+                <li>Do'stingiz qo'shilgani uchun: 3 ball</li>
+                <li><strong>Maksimal: 200 ball</strong></li>
+            </ul>
+            
+            <hr>
+            
+            <h3 style="text-align: center;">🧠 Eng zo'r imkoniyat!</h3>
+            <p style="text-align: center;">Qolgan barcha ballarni cheklovsiz tarzda 👉 @SimpleQuizzer_bot orqali Quiz tuzib yig'ishingiz mumkin! Har bir quiz uchun +2 ball beriladi!</p>
+            
+            <h2 style="text-align: center; margin-top: 20px;">🔥 Barchaga Omad!</h2>
+        </div>
     </div>
 
     <button class="refresh-btn" id="refresh-btn">🔄</button>
@@ -400,7 +513,7 @@
                                 <span class="channel-value">${user.uzbek_europe_points || 0} ball</span>
                             </div>
                             <div class="channel-item">
-                                <span class="channel-label">📚 Muslimbek </span>
+                                <span class="channel-label">📚 Muslimbek</span>
                                 <span class="channel-value">${user.muslimbek_points || 0} ball</span>
                             </div>
                         </div>
@@ -426,11 +539,10 @@
 
             async function loadData() {
                 try {
-                    // Add spinning animation to refresh button
                     const refreshBtn = document.getElementById('refresh-btn');
                     refreshBtn.classList.add('spinning');
                     
-                    document.querySelectorAll('.leaderboard').forEach(el => {
+                    document.querySelectorAll('.leaderboard:not(#rules-leaderboard)').forEach(el => {
                         el.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
                     });
 
@@ -513,18 +625,16 @@
                     renderChannelsLeaderboard(leaderboardData.leaderboard);
                     showMyPosition(leaderboardData.my_position);
 
-                    // Remove spinning animation after a brief delay
                     setTimeout(() => {
                         refreshBtn.classList.remove('spinning');
                     }, 600);
 
                 } catch (error) {
                     console.error('Error loading data:', error);
-                    document.querySelectorAll('.leaderboard').forEach(el => {
+                    document.querySelectorAll('.leaderboard:not(#rules-leaderboard)').forEach(el => {
                         el.innerHTML = '<div class="error">Xatolik yuz berdi. Qaytadan yuklang.</div>';
                     });
                     
-                    // Remove spinning animation on error too
                     setTimeout(() => {
                         document.getElementById('refresh-btn').classList.remove('spinning');
                     }, 600);
