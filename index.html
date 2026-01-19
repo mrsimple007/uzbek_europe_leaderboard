@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--tg-theme-hint-color, #999);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: var(--tg-theme-bg-color, #ffffff);
+            padding: 12px 0;
+            z-index: 10;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--tg-theme-button-color, #3390ec);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--tg-theme-button-color, #3390ec);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .leaderboard {
+            display: none;
+        }
+
+        .leaderboard.active {
+            display: block;
+        }
+
+        .user-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .user-card.highlight {
+            border: 2px solid var(--tg-theme-button-color, #3390ec);
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rank {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .total-points {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        .user-card.highlight .total-points {
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .activity-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--tg-theme-hint-color, #ddd);
+        }
+
+        .user-card.highlight .activity-breakdown {
+            border-top-color: rgba(255,255,255,0.3);
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .user-card.highlight .activity-item {
+            background: rgba(255,255,255,0.2);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .activity-label {
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .user-card.highlight .activity-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .activity-value {
+            font-weight: 600;
+        }
+
+        .channel-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .channel-item {
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .user-card.highlight .channel-item {
+            background: rgba(255,255,255,0.2);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .channel-label {
+            color: var(--tg-theme-hint-color, #999);
+            margin-bottom: 4px;
+        }
+
+        .user-card.highlight .channel-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .channel-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+        }
+
+        .my-position {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            padding: 16px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 Liderlar Jadvali</h1>
+        <p class="subtitle">Oxirgi 30 kun</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('all')">Umumiy</button>
+        <button class="tab" onclick="showTab('details')">Batafsil</button>
+        <button class="tab" onclick="showTab('channels')">Kanallar</button>
+    </div>
+
+    <div id="all-leaderboard" class="leaderboard active">
+        <div class="loading">Yuklanmoqda...</div>
+    </div>
+
+    <div id="details-leaderboard" class="leaderboard">
+        <div class="loading">Yuklanmoqda...</div>
+    </div>
+
+    <div id="channels-leaderboard" class="leaderboard">
+        <div class="loading">Yuklanmoqda...</div>
+    </div>
+
+    <button class="refresh-btn" onclick="requestData()">🔄</button>
+
+    <div id="my-position" class="my-position" style="display: none;"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        const userId = tg.initDataUnsafe?.user?.id;
+        let leaderboardData = null;
+
+        // Request data from bot
+        function requestData() {
+            tg.sendData(JSON.stringify({
+                action: 'get_leaderboard',
+                days: 30,
+                user_id: userId
+            }));
+        }
+
+        // Listen for data from bot (if using different approach)
+        tg.onEvent('mainButtonClicked', () => {
+            requestData();
+        });
+
+        function getRankEmoji(index) {
+            if (index === 0) return '🥇';
+            if (index === 1) return '🥈';
+            if (index === 2) return '🥉';
+            return `${index + 1}.`;
+        }
+
+        function renderAllLeaderboard(users) {
+            const container = document.getElementById('all-leaderboard');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
+                return;
+            }
+
+            container.innerHTML = users.map((user, index) => {
+                const isCurrentUser = user.user_id === userId;
+                return `
+                <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
+                    <div class="user-header">
+                        <div class="user-info">
+                            <div class="rank">${getRankEmoji(index)}</div>
+                            <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
+                        </div>
+                        <div class="total-points">${user.total_score} ball</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function renderDetailsLeaderboard(users) {
+            const container = document.getElementById('details-leaderboard');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
+                return;
+            }
+
+            container.innerHTML = users.map((user, index) => {
+                const isCurrentUser = user.user_id === userId;
+                return `
+                <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
+                    <div class="user-header">
+                        <div class="user-info">
+                            <div class="rank">${getRankEmoji(index)}</div>
+                            <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
+                        </div>
+                        <div class="total-points">${user.total_score} ball</div>
+                    </div>
+                    <div class="activity-breakdown">
+                        <div class="activity-item">
+                            <span class="activity-label">💬 Izohlar</span>
+                            <span class="activity-value">${user.comment_points || 0}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-label">❤️ Reaksiyalar</span>
+                            <span class="activity-value">${user.reaction_points || 0}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-label">🚀 Boost</span>
+                            <span class="activity-value">${user.boost_points || 0}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-label">🎯 Quizlar</span>
+                            <span class="activity-value">${user.quiz_points || 0}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-label">👥 Referal</span>
+                            <span class="activity-value">${user.referral_points || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function renderChannelsLeaderboard(users) {
+            const container = document.getElementById('channels-leaderboard');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="error">Ma\'lumot topilmadi</div>';
+                return;
+            }
+
+            container.innerHTML = users.map((user, index) => {
+                const isCurrentUser = user.user_id === userId;
+                return `
+                <div class="user-card ${isCurrentUser ? 'highlight' : ''}">
+                    <div class="user-header">
+                        <div class="user-info">
+                            <div class="rank">${getRankEmoji(index)}</div>
+                            <div class="user-name">${user.first_name || 'User'}${isCurrentUser ? ' (Siz)' : ''}</div>
+                        </div>
+                        <div class="total-points">${user.total_score} ball</div>
+                    </div>
+                    <div class="channel-breakdown">
+                        <div class="channel-item">
+                            <span class="channel-label">🇩🇪 Uzbek Europe</span>
+                            <span class="channel-value">${user.uzbek_europe_points || 0} ball</span>
+                        </div>
+                        <div class="channel-item">
+                            <span class="channel-label">📚 Muslimbek</span>
+                            <span class="channel-value">${user.muslimbek_points || 0} ball</span>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function showMyPosition(position) {
+            const container = document.getElementById('my-position');
+            if (position) {
+                container.style.display = 'block';
+                container.textContent = `Sizning o'rningiz: #${position.rank} - ${position.points} ball`;
+            }
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.leaderboard').forEach(l => l.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-leaderboard`).classList.add('active');
+        }
+
+        // Load data from URL parameters or localStorage
+        function loadData() {
+            try {
+                // Try to get data from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const dataParam = urlParams.get('data');
+                
+                if (dataParam) {
+                    // Decode base64 if needed
+                    const decodedData = atob(dataParam);
+                    leaderboardData = JSON.parse(decodedData);
+                } else {
+                    // Try localStorage as fallback
+                    const storedData = localStorage.getItem('leaderboard_data');
+                    if (storedData) {
+                        leaderboardData = JSON.parse(storedData);
+                    }
+                }
+
+                if (leaderboardData) {
+                    renderAllLeaderboard(leaderboardData.leaderboard);
+                    renderDetailsLeaderboard(leaderboardData.leaderboard);
+                    renderChannelsLeaderboard(leaderboardData.leaderboard);
+                    showMyPosition(leaderboardData.my_position);
+                } else {
+                    // No data available, request it
+                    requestData();
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.querySelectorAll('.leaderboard').forEach(el => {
+                    el.innerHTML = '<div class="error">Xatolik yuz berdi. Qaytadan yuklang.</div>';
+                });
+            }
+        }
+
+        // Initialize
+        loadData();
+
+        // Update data every 30 seconds if tab is active
+        setInterval(() => {
+            if (!document.hidden) {
+                loadData();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
