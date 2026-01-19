@@ -238,6 +238,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        .refresh-btn.spinning {
+            animation: spin 0.6s linear;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -279,8 +293,8 @@
             const userId = tg.initDataUnsafe?.user?.id;
             let leaderboardData = null;
 
-        const SUPABASE_URL = 'https://azoshxgptlskbwmjekot.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6b3NoeGdwdGxza2J3bWpla290Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTIzNDMwMiwiZXhwIjoyMDc2ODEwMzAyfQ.kyMBOTUv7ikyPDFy_0ofuUL2f5bVtOP58QY7ITHa4b8';
+            const SUPABASE_URL = 'https://azoshxgptlskbwmjekot.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6b3NoeGdwdGxza2J3bWpla290Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTIzNDMwMiwiZXhwIjoyMDc2ODEwMzAyfQ.kyMBOTUv7ikyPDFy_0ofuUL2f5bVtOP58QY7ITHa4b8';
              
             const ADMIN_IDS = [7967610894, 8437026582, 122290051, 999932510];
 
@@ -412,6 +426,10 @@
 
             async function loadData() {
                 try {
+                    // Add spinning animation to refresh button
+                    const refreshBtn = document.getElementById('refresh-btn');
+                    refreshBtn.classList.add('spinning');
+                    
                     document.querySelectorAll('.leaderboard').forEach(el => {
                         el.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
                     });
@@ -495,11 +513,21 @@
                     renderChannelsLeaderboard(leaderboardData.leaderboard);
                     showMyPosition(leaderboardData.my_position);
 
+                    // Remove spinning animation after a brief delay
+                    setTimeout(() => {
+                        refreshBtn.classList.remove('spinning');
+                    }, 600);
+
                 } catch (error) {
                     console.error('Error loading data:', error);
                     document.querySelectorAll('.leaderboard').forEach(el => {
                         el.innerHTML = '<div class="error">Xatolik yuz berdi. Qaytadan yuklang.</div>';
                     });
+                    
+                    // Remove spinning animation on error too
+                    setTimeout(() => {
+                        document.getElementById('refresh-btn').classList.remove('spinning');
+                    }, 600);
                 }
             }
 
@@ -512,15 +540,9 @@
 
             document.getElementById('refresh-btn').addEventListener('click', loadData);
 
-            // Initialize
+            // Initialize - load data once on page load
             loadData();
 
-            // Auto-refresh every 30 seconds
-            setInterval(() => {
-                if (!document.hidden) {
-                    loadData();
-                }
-            }, 30000);
         })();
     </script>
 </body>
