@@ -410,7 +410,12 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.leaderboard').forEach(l => l.classList.remove('active'));
             
-            event.target.classList.add('active');
+            // Fix: use 'this' or find the clicked button properly
+            const clickedTab = Array.from(document.querySelectorAll('.tab')).find(
+                t => t.textContent.includes(tab === 'all' ? 'Umumiy' : tab === 'details' ? 'Batafsil' : 'Kanallar')
+            );
+            if (clickedTab) clickedTab.classList.add('active');
+            
             document.getElementById(`${tab}-leaderboard`).classList.add('active');
         }
 
