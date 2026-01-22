@@ -480,6 +480,10 @@
                                 <span class="activity-value">${user.quiz_points || 0}</span>
                             </div>
                             <div class="activity-item">
+                                <span class="activity-label">📱 Instagram</span>
+                                <span class="activity-value">${user.instagram_points || 0}</span>
+                            </div>
+                            <div class="activity-item">
                                 <span class="activity-label">👥 Referal</span>
                                 <span class="activity-value">${user.referral_points || 0}</span>
                             </div>
@@ -577,6 +581,7 @@
                                 boost_points: 0,
                                 quiz_points: 0,
                                 referral_points: 0,
+                                instagram_points: 0,
                                 uzbek_europe_points: 0,
                                 muslimbek_points: 0
                             };
@@ -593,7 +598,8 @@
                         else if (activity === 'boost') userScores[uid].boost_points += points;
                         else if (activity === 'quiz') userScores[uid].quiz_points += points;
                         else if (activity === 'referral' || activity === 'joining') userScores[uid].referral_points += points;
-
+                        else if (activity === 'instagram') userScores[uid].instagram_points += points;
+                        
                         if (channel === 'uzbek_europe') userScores[uid].uzbek_europe_points += points;
                         else if (channel === 'muslimbek_01') userScores[uid].muslimbek_points += points;
                     });
