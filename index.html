@@ -391,7 +391,13 @@
                     <li>@_muslimbek_01 va @uzbek_german</li>
                     <li><strong>Jami: 50 ball</strong></li>
                 </ul>
-            
+            <h4>📱 YouTube obunalar:</h4>
+                <ul>
+                    <li>Har bir sahifa: 50 ball</li>
+                    <li>https://www.youtube.com/@MuslimbekAbdurakhimov</li>
+                    <li><strong>Jami: 50 ball</strong></li>
+                </ul>
+                
             <h3 style="text-align: center;">🧠 Eng zo'r imkoniyat!</h3>
             <p style="text-align: center;">Qolgan barcha ballarni cheklovsiz tarzda 👉 @SimpleQuizzer_bot orqali Quiz tuzib yig'ishingiz mumkin! Har bir quiz uchun +2 ball beriladi!</p>
             
@@ -489,6 +495,10 @@
                             <div class="activity-item">
                                 <span class="activity-label">📱 Instagram</span>
                                 <span class="activity-value">${user.instagram_points || 0}</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">📱 YouTube</span>
+                                <span class="activity-value">${user.youtube_points || 0}</span>
                             </div>
                             <div class="activity-item">
                                 <span class="activity-label">👥 Referal</span>
@@ -589,6 +599,7 @@
                                 quiz_points: 0,
                                 referral_points: 0,
                                 instagram_points: 0,
+                                youtube_points: 0,
                                 uzbek_europe_points: 0,
                                 muslimbek_points: 0
                             };
@@ -606,6 +617,7 @@
                         else if (activity === 'quiz') userScores[uid].quiz_points += points;
                         else if (activity === 'referral' || activity === 'joining') userScores[uid].referral_points += points;
                         else if (activity === 'instagram') userScores[uid].instagram_points += points;
+                        else if (activity === 'youtube') userScores[uid].youtube_points += points;
                         
                         if (channel === 'uzbek_europe') userScores[uid].uzbek_europe_points += points;
                         else if (channel === 'muslimbek_01') userScores[uid].muslimbek_points += points;
