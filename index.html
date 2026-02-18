@@ -568,7 +568,7 @@
                     });
 
                     const cutoffDate = new Date();
-                    cutoffDate.setDate(cutoffDate.getDate() - 30);
+                    cutoffDate.setDate(cutoffDate.getDate() - 31);
 
                     const { data, error } = await db
                         .from('activity_log')
